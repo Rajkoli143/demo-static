@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine's Responses Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #FFE4E4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #FF69B4;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .response-list {
+            list-style: none;
+            padding: 0;
+        }
+        .response-item {
+            background: #FFF0F5;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .yes {
+            border-left: 5px solid #4CAF50;
+        }
+        .no {
+            border-left: 5px solid #f44336;
+        }
+        .name {
+            font-weight: bold;
+            color: #333;
+        }
+        .response {
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .yes .response {
+            background: #4CAF50;
+        }
+        .no .response {
+            background: #f44336;
+        }
+        .time {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            min-width: 150px;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FF69B4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💝 Valentine's Responses 💝</h1>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-number" id="totalResponses">0</div>
+                <div>Total Responses</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="yesCount">0</div>
+                <div>Said Yes! 💖</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number" id="noCount">0</div>
+                <div>Said No 💔</div>
+            </div>
+        </div>
+
+        <ul class="response-list" id="responseList">
+            <!-- Responses will be added here dynamically -->
+        </ul>
+    </div>
+
+    <script>
+        async function loadResponses() {
+            try {
+                const response = await fetch('https://valentine-backend.onrender.com/api/responses');
+                const data = await response.json();
+                
+                const responseList = document.getElementById('responseList');
+                responseList.innerHTML = '';
+                
+                let yesCount = 0;
+                let noCount = 0;
+
+                data.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = `response-item ${item.buttonType}`;
+                    
+                    const date = new Date(item.timestamp);
+                    const formattedDate = date.toLocaleString();
+
+                    li.innerHTML = `
+                        <span class="name">${item.name}</span>
+                        <span class="response">${item.buttonType === 'yes' ? 'Said Yes! 💖' : 'Said No 💔'}</span>
+                        <span class="time">${formattedDate}</span>
+                    `;
+                    
+                    responseList.appendChild(li);
+                    
+                    if (item.buttonType === 'yes') yesCount++;
+                    else noCount++;
+                });
+
+                // Update stats
+                document.getElementById('totalResponses').textContent = data.length;
+                document.getElementById('yesCount').textContent = yesCount;
+                document.getElementById('noCount').textContent = noCount;
+            } catch (error) {
+                console.error('Error loading responses:', error);
+            }
+        }
+
+        // Load responses immediately and refresh every 30 seconds
+        loadResponses();
+        setInterval(loadResponses, 30000);
+    </script>
+</body>
+</html>

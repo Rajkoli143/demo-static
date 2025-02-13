@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will You Be My Valentine?</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #FFE4E4;
+            font-family: Arial, sans-serif;
+        }
+        .music-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .music-toggle:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .music-toggle i {
+            font-size: 24px;
+            color: #FF69B4;
+        }
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 25px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        .gif-container {
+            margin: 1rem auto;
+            width: 100%;
+            max-width: 300px;
+        }
+        .title {
+            color: #FF69B4;
+            font-size: 2.2rem;
+            margin: 1.5rem 0;
+            line-height: 1.4;
+        }
+        .button-container {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        .btn {
+            padding: 1rem 3rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: #FF69B4;
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 105, 180, 0.4);
+        }
+        .response-gif {
+            display: none;
+            max-width: 300px;
+            margin: 2rem auto;
+            border-radius: 10px;
+        }
+        .name-input {
+            display: block;
+            margin: 20px auto;
+            padding: 10px;
+            border-radius: 20px;
+            border: 2px solid #FF69B4;
+            outline: none;
+            text-align: center;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Music Toggle -->
+    <div class="music-toggle">
+        <i class="fas fa-music"></i>
+        <audio id="bgMusic" preload="auto" loop>
+            <source src="assets/music/Ishq Hai - (Raag.Fm).mp3" type="audio/mpeg">
+            <source src="assets/music/Ishq Hai - (Raag.Fm).ogg" type="audio/ogg">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+
+    <div class="container">
+        <img src="assets/gif/asked.gif" alt="Cute Cat" style="width: 250px; margin-bottom: 15px; border-radius: 15px;">
+        <h1 class="title">Will you be my valentine? 🥺</h1>
+        <input type="text" id="nameInput" placeholder="Enter your name" class="name-input">
+        <div class="button-container">
+            <button class="btn yes-btn" onclick="handleYes()">Yes 💖</button>
+            <button class="btn no-btn" onclick="handleNo()">No 🥺</button>
+        </div>
+        <img id="responseGif" class="response-gif" alt="Response GIF">
+    </div>
+
+    <script>
+        // Music control
+        const musicToggle = document.querySelector('.music-toggle');
+        const bgMusic = document.getElementById('bgMusic');
+
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const startTime = parseFloat(urlParams.get('t')) || 0;
+        const shouldPlay = urlParams.get('play') !== 'false';
+
+        // Initialize music state
+        window.addEventListener('DOMContentLoaded', function() {
+            bgMusic.currentTime = startTime;
+            musicToggle.style.opacity = shouldPlay ? '1' : '0.5';
+            
+            if (shouldPlay) {
+                const playPromise = bgMusic.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(function(error) {
+                        console.log("Audio autoplay failed:", error);
+                        // Try again with user interaction
+                        const playOnFirstClick = function() {
+                            bgMusic.currentTime = startTime;  // Set time again in case it was reset
+                            bgMusic.play();
+                            document.removeEventListener('click', playOnFirstClick);
+                        };
+                        document.addEventListener('click', playOnFirstClick, { once: true });
+                    });
+                }
+            }
+        });
+
+        // Music toggle functionality
+        musicToggle.addEventListener('click', function() {
+            if (!bgMusic.paused) {
+                bgMusic.pause();
+                musicToggle.style.opacity = '0.5';
+            } else {
+                bgMusic.play();
+                musicToggle.style.opacity = '1';
+            }
+        });
+
+        let noCount = 0;
+        const noBtn = document.querySelector('.no-btn');
+        const container = document.querySelector('.container');
+        const title = document.querySelector('.title');
+        const responseGif = document.getElementById('responseGif');
+        const nameInput = document.getElementById('nameInput');
+
+        // Function to track clicks on the backend
+        async function trackClick(buttonType) {
+            const name = nameInput.value.trim();
+            if (!name) {
+                alert('Please enter your name first! 💝');
+                return false;
+            }
+
+            try {
+                const response = await fetch('https://valentine-backend.onrender.com/api/track-click', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        name,
+                        buttonType,
+                        timestamp: new Date().toISOString()
+                    })
+                });
+                const data = await response.json();
+                console.log('Click tracked:', data);
+                return true;
+            } catch (error) {
+                console.error('Error tracking click:', error);
+                return false;
+            }
+        }
+
+        async function handleYes() {
+            if (await trackClick('yes')) {
+                nameInput.style.display = 'none';
+                title.innerHTML = "Yay! I knew you'd say yes! 💖";
+                responseGif.src = "assets/gif/yes.gif";
+                responseGif.style.display = "block";
+                document.querySelector('.button-container').style.display = "none";
+            }
+        }
+
+        async function handleNo() {
+            if (await trackClick('no')) {
+                noCount++;
+                responseGif.style.display = "block";
+                
+                if (noCount === 1) {
+                    title.innerHTML = "Soch lo acche se!🙄";
+                    responseGif.src = "assets/gif/1st.gif";
+                    setTimeout(() => {
+                        responseGif.style.display = "none";
+                    }, 2000);
+                } else if (noCount === 2) {
+                    title.innerHTML = "Ek aur baar Soch lo! 😣";
+                    responseGif.src = "assets/gif/2nd.gif";
+                    setTimeout(() => {
+                        responseGif.style.display = "none";
+                    }, 2000);
+                } else if (noCount >= 3) {
+                    title.innerHTML = "Manjha na! kitna bhav khaegi 😭😏 chal No pakkad ke dekha";
+                    responseGif.src = "assets/gif/3rd.gif";
+                    noBtn.style.position = "fixed";
+                    
+                    noBtn.addEventListener('mouseover', function() {
+                        const maxX = window.innerWidth - noBtn.offsetWidth;
+                        const maxY = window.innerHeight - noBtn.offsetHeight;
+                        const randomX = Math.random() * maxX;
+                        const randomY = Math.random() * maxY;
+                        
+                        noBtn.style.left = randomX + 'px';
+                        noBtn.style.top = randomY + 'px';
+                    });
+                }
+            }
+        }
+    </script>
+</body>
+</html>
