@@ -9,7 +9,9 @@ const PORT = process.env.PORT || 3000;
 // Enable CORS and JSON parsing
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+
+// Serve static files from the dist directory
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // Store responses in a file
 const RESPONSES_FILE = 'responses.json';
@@ -67,6 +69,16 @@ app.get('/api/responses', (req, res) => {
     res.json(responses);
 });
 
+// Serve index.html for root path
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'demo.html'));
+});
+
+// Serve dashboard
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'dashboard.html'));
+});
+
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

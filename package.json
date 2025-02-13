@@ -4,7 +4,12 @@
   "description": "Valentine's Day App with click tracking",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build": "mkdir -p dist && cp -r demo.html dashboard.html assets dist/",
+    "postinstall": "npm run build"
+  },
+  "engines": {
+    "node": ">=14.0.0"
   },
   "dependencies": {
     "express": "^4.18.2",
