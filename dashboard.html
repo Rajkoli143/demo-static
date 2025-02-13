@@ -110,7 +110,7 @@
     <script>
         async function loadResponses() {
             try {
-                const response = await fetch('https://valentine-backend.onrender.com/api/responses');
+                const response = await fetch('/api/responses');
                 const data = await response.json();
                 
                 const responseList = document.getElementById('responseList');
